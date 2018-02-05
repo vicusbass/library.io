@@ -7,21 +7,30 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Library.io.Data;
 using Library.io.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace Library.io.Controllers
 {
     public class RentalsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly ILogger _logger;
 
-        public RentalsController(ApplicationDbContext context)
+        public RentalsController(ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            ILogger<RentalsController> logger)
         {
             _context = context;
+            this.userManager = userManager;
+            _logger = logger;
         }
 
         // GET: Rentals
         public async Task<IActionResult> Index()
         {
+            //TODO show book name, not ID
             return View(await _context.Rental.ToListAsync());
         }
 
@@ -63,6 +72,35 @@ namespace Library.io.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(rental);
+        }
+        // GET: Rentals/Rent/{id} - where id=book id
+        public async Task<IActionResult> Rent(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var book = await _context.Book
+                .SingleOrDefaultAsync(m => m.ID == id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            return View(book);
+        }
+
+        [HttpPost, ActionName("Rent")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Rent(int id)
+        {
+            _logger.LogInformation("_______Renting book with id: "+id);
+            Book book = await _context.Book.SingleOrDefaultAsync(m => m.ID == id);
+            Rental rental = new Rental() { Book = book, User = await GetCurrentUserAsync(), Expiration=DateTime.Now.AddDays(30) };
+            _context.Add(rental);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));            
         }
 
         // GET: Rentals/Edit/5
@@ -149,5 +187,13 @@ namespace Library.io.Controllers
         {
             return _context.Rental.Any(e => e.ID == id);
         }
+
+        public async Task<string> GetCurrentUserId()
+        {
+            ApplicationUser usr = await GetCurrentUserAsync();
+            return usr?.Id;
+        }
+
+        private Task<ApplicationUser> GetCurrentUserAsync() => userManager.GetUserAsync(HttpContext.User);
     }
 }
