@@ -11,9 +11,10 @@ using System;
 namespace Library.io.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180206195512_0007_Rental_FK_Fully_Defined")]
+    partial class _0007_Rental_FK_Fully_Defined
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

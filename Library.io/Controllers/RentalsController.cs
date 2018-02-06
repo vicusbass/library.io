@@ -31,25 +31,11 @@ namespace Library.io.Controllers
         public async Task<IActionResult> Index()
         {
             //TODO show book name, not ID
-            return View(await _context.Rental.ToListAsync());
-        }
-
-        // GET: Rentals/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var rental = await _context.Rental
-                .SingleOrDefaultAsync(m => m.ID == id);
-            if (rental == null)
-            {
-                return NotFound();
-            }
-
-            return View(rental);
+            return View(await _context.Rental
+                .Include(r => r.Book)
+                .Include(r => r.User)
+                .OrderByDescending(r => r.Expiration)
+                .ToListAsync());
         }
 
         // GET: Rentals/Create
@@ -58,21 +44,6 @@ namespace Library.io.Controllers
             return View();
         }
 
-        // POST: Rentals/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,Expiration")] Rental rental)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(rental);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(rental);
-        }
         // GET: Rentals/Rent/{id} - where id=book id
         public async Task<IActionResult> Rent(int? id)
         {
@@ -97,63 +68,19 @@ namespace Library.io.Controllers
         {
             _logger.LogInformation("_______Renting book with id: "+id);
             Book book = await _context.Book.SingleOrDefaultAsync(m => m.ID == id);
-            Rental rental = new Rental() { Book = book, User = await GetCurrentUserAsync(), Expiration=DateTime.Now.AddDays(30) };
-            _context.Add(rental);
-            await _context.SaveChangesAsync();
+            if (book.Available > 0)
+            {
+                Rental rental = new Rental() { Book = book, User = await GetCurrentUserAsync(), Expiration = DateTime.Now.AddDays(30) };
+                _context.Add(rental);
+                //decrease number of available books
+                book.Available--;
+                _context.Update(book);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));            
         }
 
-        // GET: Rentals/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var rental = await _context.Rental.SingleOrDefaultAsync(m => m.ID == id);
-            if (rental == null)
-            {
-                return NotFound();
-            }
-            return View(rental);
-        }
-
-        // POST: Rentals/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,Expiration")] Rental rental)
-        {
-            if (id != rental.ID)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(rental);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!RentalExists(rental.ID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(rental);
-        }
-
+ 
         // GET: Rentals/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -178,7 +105,11 @@ namespace Library.io.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var rental = await _context.Rental.SingleOrDefaultAsync(m => m.ID == id);
+            //increase number of available books after returning it
+            var book = await _context.Book.SingleOrDefaultAsync(m => m.ID == rental.BookId);
+            book.Available += 1;
             _context.Rental.Remove(rental);
+            _context.Book.Update(book);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

@@ -25,6 +25,7 @@ namespace Library.io.Controllers
         }
 
         // GET: Books
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> Index()
         {
             string role = await GetCurrentUserRole();
@@ -164,6 +165,39 @@ namespace Library.io.Controllers
             _context.Book.Remove(book);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Books/Search
+        [Authorize(Roles = "Admin,User")]
+        public IActionResult SearchView()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin,User")]
+        public async Task<IActionResult> Search(int id, [Bind("Title,Authors,ISBN")] Book book)
+        {
+            var books = from m in _context.Book
+                         select m;
+
+            if (!String.IsNullOrEmpty(book.Title))
+            {
+                books = books.Where(b => b.Title.Contains(book.Title));
+            }
+
+            if (!String.IsNullOrEmpty(book.ISBN))
+            {
+                books = books.Where(b => b.ISBN.Contains(book.ISBN));
+            }
+
+            if (!String.IsNullOrEmpty(book.Authors))
+            {
+                books = books.Where(b => b.Authors.Contains(book.Authors));
+            }
+
+            List<Book> Books = await books.ToListAsync();
+            return View("SearchResults", Books);
         }
 
         private bool BookExists(int id)

@@ -1,13 +1,11 @@
 ﻿@model IEnumerable<Library.io.Models.Book>
 
 @{
-    ViewData["Title"] = "IndexUser";
+    ViewData["Title"] = "Search Results";
 }
 
 <h2>Books list</h2>
-<p>
-    <a class="btn btn-success" asp-action="SearchView">Search book</a>
-</p>
+
 <table class="table">
     <thead>
         <tr>
@@ -49,9 +47,9 @@
                     @Html.DisplayFor(modelItem => item.Edition)
                 </td>
                 <td>
-                    <a class="btn btn-sm btn-success @(item.Available > 0 ? "" : "disabled")" asp-controller="Rentals" asp-action="Rent" asp-route-id="@item.ID">Rent</a>
+                    <a class="btn btn-sm btn-success" asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.ID">Delete</a>
                 </td>
-
             </tr>
         }
     </tbody>

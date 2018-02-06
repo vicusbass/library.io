@@ -11,9 +11,10 @@ using System;
 namespace Library.io.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180206180810_0006_Rental_FK_Convention")]
+    partial class _0006_Rental_FK_Convention
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,17 +127,17 @@ namespace Library.io.Data.Migrations
                     b.Property<int>("ID")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ApplicationUserId");
-
-                    b.Property<int>("BookId");
+                    b.Property<int?>("BookIdID");
 
                     b.Property<DateTime>("Expiration");
 
+                    b.Property<string>("UserIdId");
+
                     b.HasKey("ID");
 
-                    b.HasIndex("ApplicationUserId");
+                    b.HasIndex("BookIdID");
 
-                    b.HasIndex("BookId");
+                    b.HasIndex("UserIdId");
 
                     b.ToTable("Rental");
                 });
@@ -227,14 +228,13 @@ namespace Library.io.Data.Migrations
 
             modelBuilder.Entity("Library.io.Models.Rental", b =>
                 {
-                    b.HasOne("Library.io.Models.ApplicationUser", "User")
+                    b.HasOne("Library.io.Models.Book", "BookId")
                         .WithMany()
-                        .HasForeignKey("ApplicationUserId");
+                        .HasForeignKey("BookIdID");
 
-                    b.HasOne("Library.io.Models.Book", "Book")
-                        .WithMany("Rentals")
-                        .HasForeignKey("BookId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                    b.HasOne("Library.io.Models.ApplicationUser", "UserId")
+                        .WithMany()
+                        .HasForeignKey("UserIdId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

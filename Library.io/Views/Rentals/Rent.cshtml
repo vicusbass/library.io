@@ -4,18 +4,27 @@
     ViewData["Title"] = "Rent";
 }
 
-<h2>Are you sure you want to rent it?</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Rent">
-            <input type="hidden" asp-for="ID" />
-            <input type="submit" value="Rent" class="btn btn-default" /> |
-            <a asp-action="Index">Back to List</a>
-        </form>
+@if (Model.Available > 0)
+{
+    <h2>Are you sure you want to rent it?</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Rent">
+                <input type="hidden" asp-for="ID" />
+                <input type="submit" value="Rent" class="btn btn-default" /> |
+                <a asp-action="Index">Back to List</a>
+            </form>
+        </div>
     </div>
-</div>
+}
+else
+{
+    <div class="alert alert-danger" role="alert">
+        No available books at the moment
+    </div>
 
+}
 <div>
     <a asp-action="Index">Back to List</a>
 </div>

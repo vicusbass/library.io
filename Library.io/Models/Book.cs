@@ -13,5 +13,6 @@ namespace Library.io.Models
 		public int Available { get; set; }
 		public string ISBN { get; set; }
 		public string Edition { get; set; }
+        public ICollection<Rental> Rentals { get; set; }
 	}
 }
