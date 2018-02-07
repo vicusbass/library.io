@@ -30,19 +30,27 @@ namespace Library.io.Controllers
         // GET: Rentals
         public async Task<IActionResult> Index()
         {
-            //TODO show book name, not ID
-            return View(await _context.Rental
-                .Include(r => r.Book)
-                .Include(r => r.User)
-                .OrderByDescending(r => r.Expiration)
-                .ToListAsync());
+            //return all rentals when current user is admin
+            if (await GetCurrentUserRole() == "Admin")
+            {
+                return View(await _context.Rental
+                    .Include(r => r.Book)
+                    .Include(r => r.User)
+                    .OrderByDescending(r => r.Expiration)
+                    .ToListAsync());
+            }
+            else
+            {
+                string CurrentUserId = await GetCurrentUserId();
+                return View(await _context.Rental
+                    .Where(r => r.ApplicationUserId== CurrentUserId)
+                    .Include(r => r.Book)
+                    .Include(r => r.User)
+                    .OrderByDescending(r => r.Expiration)
+                    .ToListAsync());
+            }
         }
 
-        // GET: Rentals/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
 
         // GET: Rentals/Rent/{id} - where id=book id
         public async Task<IActionResult> Rent(int? id)
@@ -59,6 +67,11 @@ namespace Library.io.Controllers
                 return NotFound();
             }
 
+            if (RentalExistsForUser(book.ID, await GetCurrentUserId()))
+            {
+                return View(null);
+            }
+
             return View(book);
         }
 
@@ -66,7 +79,8 @@ namespace Library.io.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rent(int id)
         {
-            _logger.LogInformation("_______Renting book with id: "+id);
+            //TODO check if the user already rented the book
+            _logger.LogInformation("_______Renting book with id: " + id);
             Book book = await _context.Book.SingleOrDefaultAsync(m => m.ID == id);
             if (book.Available > 0)
             {
@@ -77,10 +91,10 @@ namespace Library.io.Controllers
                 _context.Update(book);
                 await _context.SaveChangesAsync();
             }
-            return RedirectToAction(nameof(Index));            
+            return RedirectToAction(nameof(Index));
         }
 
- 
+
         // GET: Rentals/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -114,9 +128,20 @@ namespace Library.io.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        private bool RentalExistsForUser(int BookId, string UserId)
+        {
+            return _context.Rental.Any(e => e.BookId == BookId && e.ApplicationUserId == UserId);
+        }
+
         private bool RentalExists(int id)
         {
             return _context.Rental.Any(e => e.ID == id);
+        }
+
+        private async Task<string> GetCurrentUserRole()
+        {
+            ApplicationUser usr = await GetCurrentUserAsync();
+            return userManager.GetRolesAsync(usr).Result.Single();
         }
 
         public async Task<string> GetCurrentUserId()

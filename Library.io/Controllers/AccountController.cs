@@ -43,6 +43,12 @@ namespace Library.io.Controllers
         [TempData]
         public string ErrorMessage { get; set; }
 
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Index()
+        {
+            return View(_userManager.Users.ToList());
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> Login(string returnUrl = null)

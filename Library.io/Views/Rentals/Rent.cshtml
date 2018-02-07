@@ -3,8 +3,11 @@
 @{
     ViewData["Title"] = "Rent";
 }
-
-@if (Model.Available > 0)
+@if (Model == null)
+{
+    <h2>You already have this book!</h2>
+}
+else if (Model.Available > 0)
 {
     <h2>Are you sure you want to rent it?</h2>
     <hr />

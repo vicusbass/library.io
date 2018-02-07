@@ -25,5 +25,6 @@ namespace Library.io.Data
 
         public DbSet<Library.io.Models.Book> Book { get; set; }
         public DbSet<Library.io.Models.Rental> Rental { get; set; }
+        public DbSet<Library.io.Models.ApplicationUser> ApplicationUser { get; set; }
     }
 }

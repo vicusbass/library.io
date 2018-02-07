@@ -178,6 +178,7 @@ namespace Library.io.Controllers
         [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> Search(int id, [Bind("Title,Authors,ISBN")] Book book)
         {
+            //TODO render buttons in search results based on Role
             var books = from m in _context.Book
                          select m;
 
